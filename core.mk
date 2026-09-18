@@ -42,7 +42,7 @@ MAKELIB_DIR    ?= $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 # ------------------------------------------------------------------------------
 # Phony Targets Declaration
 # ------------------------------------------------------------------------------
-.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean sync-config install-hooks
+.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean build sync-config install-hooks
 
 # ------------------------------------------------------------------------------
 # Help Target (Self-Documenting via '##' comments)
@@ -184,6 +184,15 @@ clean: ## Remove temporary build, test, and cache artifacts
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@echo "==> Clean complete."
+
+# ------------------------------------------------------------------------------
+# Packaging & Distribution
+# ------------------------------------------------------------------------------
+build: clean ## Build source distribution and wheel packages in dist/
+	@echo "==> Building distribution packages with PEP 517 build..."
+	@$(PYTHON) -m build
+	@echo "==> Distribution packages created in dist/:"
+	@ls -la dist/
 
 # ------------------------------------------------------------------------------
 # Git Hook Installation & Safeguards
