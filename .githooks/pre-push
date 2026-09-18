@@ -3,7 +3,8 @@
 # Git pre-push hook for makelib-py
 # Enforces:
 #  1. Disallows direct pushes to 'main' (forces branch + PR workflow).
-#  2. Executes 'make check-all' before pushing feature branches.
+#  2. Enforces strict branch classification schema (feat/, fix/, major/, etc.).
+#  3. Executes 'make check-all' before pushing branches to remote.
 # ==============================================================================
 
 set -euo pipefail
@@ -16,13 +17,32 @@ if [ "$CURRENT_BRANCH" = "$PROTECTED_BRANCH" ]; then
     echo "========================================================================"
     echo "ERROR: Direct push to '$PROTECTED_BRANCH' is prohibited!"
     echo "Branch protection policy requires creating a feature branch and a Pull Request."
-    echo "  1. git checkout -b feature/my-feature-name"
-    echo "  2. git push origin feature/my-feature-name"
+    echo "  1. git checkout -b feat/my-feature-name"
+    echo "  2. git push origin feat/my-feature-name"
     echo "  3. Open a Pull Request against $PROTECTED_BRANCH"
     echo "========================================================================"
     exit 1
 fi
 
+# Enforce strict branch naming conventions to classify changes
+BRANCH_REGEX="^(feat|feature|fix|patch|major|breaking|docs|chore|refactor|ci)/[a-z0-9._-]+$"
+if [[ ! "$CURRENT_BRANCH" =~ $BRANCH_REGEX ]]; then
+    echo "========================================================================"
+    echo "ERROR: Branch '$CURRENT_BRANCH' violates branch naming policy!"
+    echo "Branch names must classify changes using one of the following prefixes:"
+    echo "  - major/<name> or breaking/<name> (Breaking changes -> MAJOR bump)"
+    echo "  - feat/<name>  or feature/<name>  (New features    -> MINOR bump)"
+    echo "  - fix/<name>   or patch/<name>    (Bug fixes       -> PATCH bump)"
+    echo "  - docs/<name>  or chore/<name>    (Documentation / maintenance -> PATCH)"
+    echo "  - refactor/<name> or ci/<name>    (Refactors / CI updates     -> PATCH)"
+    echo ""
+    echo "Allowed characters after prefix: lowercase alphanumeric, dashes, dots, underscores."
+    echo "Example: git checkout -b feat/add-cache-support"
+    echo "========================================================================"
+    exit 1
+fi
+
+echo "==> Branch name '$CURRENT_BRANCH' is compliant."
 echo "==> Running local quality verification (make check-all) before pushing..."
 if ! make check-all; then
     echo "========================================================================"
@@ -31,5 +51,5 @@ if ! make check-all; then
     exit 1
 fi
 
-echo "==> Pre-push quality checks passed successfully."
+echo "==> Pre-push checks passed successfully."
 exit 0

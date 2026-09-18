@@ -42,7 +42,7 @@ MAKELIB_DIR    ?= $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 # ------------------------------------------------------------------------------
 # Phony Targets Declaration
 # ------------------------------------------------------------------------------
-.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean build sync-config install-hooks
+.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean build bump-patch bump-minor bump-major sync-config install-hooks
 
 # ------------------------------------------------------------------------------
 # Help Target (Self-Documenting via '##' comments)
@@ -193,6 +193,21 @@ build: clean ## Build source distribution and wheel packages in dist/
 	@$(PYTHON) -m build
 	@echo "==> Distribution packages created in dist/:"
 	@ls -la dist/
+
+# ------------------------------------------------------------------------------
+# Semantic Version Management
+# ------------------------------------------------------------------------------
+bump-patch: ## Increment semantic patch version (e.g. 0.1.0 -> 0.1.1)
+	@echo "==> Bumping patch version..."
+	@$(PYTHON) -c 'from makelib.version import bump_version, update_project_version; from makelib.config import load_pyproject; cur = load_pyproject()["project"]["version"]; nxt = bump_version(cur, "patch"); update_project_version(nxt); print(f"==> Successfully bumped version: {cur} -> {nxt}")'
+
+bump-minor: ## Increment semantic minor version (e.g. 0.1.0 -> 0.2.0)
+	@echo "==> Bumping minor version..."
+	@$(PYTHON) -c 'from makelib.version import bump_version, update_project_version; from makelib.config import load_pyproject; cur = load_pyproject()["project"]["version"]; nxt = bump_version(cur, "minor"); update_project_version(nxt); print(f"==> Successfully bumped version: {cur} -> {nxt}")'
+
+bump-major: ## Increment semantic major version (e.g. 0.1.0 -> 1.0.0)
+	@echo "==> Bumping major version..."
+	@$(PYTHON) -c 'from makelib.version import bump_version, update_project_version; from makelib.config import load_pyproject; cur = load_pyproject()["project"]["version"]; nxt = bump_version(cur, "major"); update_project_version(nxt); print(f"==> Successfully bumped version: {cur} -> {nxt}")'
 
 # ------------------------------------------------------------------------------
 # Git Hook Installation & Safeguards

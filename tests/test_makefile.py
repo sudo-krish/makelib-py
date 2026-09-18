@@ -41,6 +41,9 @@ def test_core_mk_contains_required_targets() -> None:
         "check-all",
         "clean",
         "build",
+        "bump-patch",
+        "bump-minor",
+        "bump-major",
         "sync-config",
         "install-hooks",
     ]
