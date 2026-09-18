@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import re
 import shutil
+from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
@@ -45,7 +45,9 @@ def test_core_mk_contains_required_targets() -> None:
     for target in required_targets:
         pattern = rf"^{target}:.*?##\s+(.+)$"
         match = re.search(pattern, core_mk, re.MULTILINE)
-        assert match is not None, f"Target '{target}' missing or not self-documented in core.mk"
+        assert match is not None, (
+            f"Target '{target}' missing or not self-documented in core.mk"
+        )
 
 
 def test_core_mk_extensible_variables() -> None:
@@ -65,13 +67,13 @@ def test_core_mk_extensible_variables() -> None:
         "CONFIG_FILE",
     ]
     for var in expected_vars:
-        assert f"{var}        ?=" in core_mk or f"{var} ?" in core_mk or f"{var} ?=" in core_mk, (
+        assert re.search(rf"^{var}\s*\?=", core_mk, re.MULTILINE) is not None, (
             f"Variable {var} not conditionally assigned in core.mk"
         )
 
 
 def test_downstream_template_contains_boilerplate() -> None:
-    """Verify downstream_template.mk contains required bootstrap variables and targets."""
+    """Verify downstream_template.mk contains bootstrap variables & targets."""
     template = (ROOT_DIR / "downstream_template.mk").read_text(encoding="utf-8")
     assert "MAKELIB_REPO ?=" in template
     assert "MAKELIB_DIR  ?=" in template

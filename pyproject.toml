@@ -7,15 +7,14 @@ name = "makelib-py"
 version = "0.1.0"
 description = "Centralized Make commands and toolchain configurations for Python projects"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
+dependencies = []
 authors = [
     { name = "makelib-py maintainers" },
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Build Tools",
     "Topic :: Software Development :: Quality Assurance",
 ]
@@ -27,7 +26,7 @@ where = ["src"]
 # Ruff Configuration (Linter, Formatter, Import Sorter, Complexity)
 # ------------------------------------------------------------------------------
 [tool.ruff]
-target-version = "py310"
+target-version = "py313"
 line-length = 88
 indent-width = 4
 
@@ -71,7 +70,7 @@ ignore = []
 max-complexity = 10
 
 [tool.ruff.lint.isort]
-known-first-party = ["src"]
+known-first-party = ["src", "makelib"]
 
 [tool.ruff.lint.per-file-ignores]
 # Assertions are standard practice in test cases
@@ -81,7 +80,7 @@ known-first-party = ["src"]
 # Mypy Configuration (Strict Static Type Checking)
 # ------------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -104,6 +103,7 @@ pretty = true
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = [
     "-ra",
     "-q",

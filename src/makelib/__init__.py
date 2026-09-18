@@ -1,4 +1,4 @@
-"""makelib - Standardized Make commands and toolchain configurations for Python projects."""
+"""makelib - Standardized Make commands and toolchain configurations."""
 
 from __future__ import annotations
 

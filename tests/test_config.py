@@ -49,7 +49,7 @@ def test_validate_missing_sections() -> None:
     """Verify that validate_toolchain_config detects missing requirements."""
     empty_config: dict[str, object] = {}
     issues = validate_toolchain_config(empty_config)
-    assert any("Ruff lint rules" in issue for issue in issues)
+    assert any("Ruff rules" in issue for issue in issues)
     assert any("mccabe.max-complexity" in issue for issue in issues)
     assert any("Mypy strict mode" in issue for issue in issues)
     assert any("Pytest testpaths" in issue for issue in issues)
@@ -60,7 +60,9 @@ def test_validate_partial_ruff_rules() -> None:
     """Verify detection of missing individual rules in Ruff select list."""
     config = {
         "tool": {
-            "ruff": {"lint": {"select": ["E", "W", "F"], "mccabe": {"max-complexity": 10}}},
+            "ruff": {
+                "lint": {"select": ["E", "W", "F"], "mccabe": {"max-complexity": 10}}
+            },
             "mypy": {"strict": True},
             "pytest": {"ini_options": {"testpaths": ["tests"]}},
             "coverage": {"report": {"fail_under": 80}},
@@ -68,7 +70,7 @@ def test_validate_partial_ruff_rules() -> None:
     }
     issues = validate_toolchain_config(config)
     assert len(issues) == 1
-    assert "Missing required Ruff lint rules" in issues[0]
+    assert "Missing required Ruff rules" in issues[0]
 
 
 def test_get_thresholds() -> None:

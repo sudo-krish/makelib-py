@@ -25,8 +25,10 @@ RUFF           ?= ruff
 MYPY           ?= mypy
 BANDIT         ?= bandit
 PIP_AUDIT      ?= pip-audit
+PIP_AUDIT_FLAGS?= $(if $(wildcard requirements.txt),-r requirements.txt,.)
 PYTEST         ?= pytest
 PYTEST_FLAGS   ?= -v
+export PYTHONPATH ?= $(SRC_DIR)
 
 # Configuration paths
 CONFIG_FILE    ?= pyproject.toml
@@ -105,8 +107,8 @@ smell: ## Inspect code smells (Ruff C901 McCabe complexity and Bandit AST securi
 # Dependency Vulnerability Audit
 # ------------------------------------------------------------------------------
 audit: ## Audit dependencies for known CVE vulnerabilities using pip-audit
-	@echo "==> Auditing installed dependencies for CVE vulnerabilities..."
-	@$(PIP_AUDIT)
+	@echo "==> Auditing dependencies for CVE vulnerabilities..."
+	@$(PIP_AUDIT) $(PIP_AUDIT_FLAGS)
 	@echo "==> Dependency audit passed."
 
 # ------------------------------------------------------------------------------

@@ -2,16 +2,9 @@
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 from typing import Any
-
-try:
-    import tomllib
-except ModuleNotFoundError:  # pragma: no cover
-    try:
-        import tomli as tomllib  # type: ignore[no-redef]
-    except ModuleNotFoundError:  # pragma: no cover
-        tomllib = None  # type: ignore[assignment]
 
 
 class ConfigurationError(Exception):
@@ -33,11 +26,6 @@ def load_pyproject(path: str | Path = "pyproject.toml") -> dict[str, Any]:
     target = Path(path)
     if not target.is_file():
         raise ConfigurationError(f"Configuration file not found: {target}")
-
-    if tomllib is None:
-        raise ConfigurationError(
-            "No TOML parser available. Install 'tomli' on Python < 3.11 or use Python 3.11+."
-        )
 
     try:
         with target.open("rb") as f:
@@ -71,7 +59,10 @@ def validate_toolchain_config(config: dict[str, Any]) -> list[str]:
     required_rules = {"I", "B", "C901"}
     missing_rules = required_rules - rules
     if missing_rules:
-        issues.append(f"Missing required Ruff lint rules in tool.ruff.lint.select: {sorted(missing_rules)}")
+        missing_sorted = sorted(missing_rules)
+        issues.append(
+            f"Missing required Ruff rules in tool.ruff.lint.select: {missing_sorted}"
+        )
 
     mccabe = lint.get("mccabe", {})
     if "max-complexity" not in mccabe:
@@ -85,12 +76,16 @@ def validate_toolchain_config(config: dict[str, Any]) -> list[str]:
     # 3. Pytest checks
     pytest = tools.get("pytest", {}).get("ini_options", {})
     if not pytest.get("testpaths"):
-        issues.append("Pytest testpaths is not specified in tool.pytest.ini_options.testpaths")
+        issues.append(
+            "Pytest testpaths is not specified in tool.pytest.ini_options.testpaths"
+        )
 
     # 4. Coverage checks
     cov_report = tools.get("coverage", {}).get("report", {})
     if "fail_under" not in cov_report:
-        issues.append("Coverage fail_under threshold is missing in tool.coverage.report.fail_under")
+        issues.append(
+            "Coverage fail_under threshold is missing in tool.coverage.report"
+        )
 
     return issues
 
