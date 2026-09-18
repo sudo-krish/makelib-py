@@ -64,6 +64,8 @@ def test_parse_version() -> None:
     assert parse_version("0.1.0") == (0, 1, 0)
     assert parse_version("v1.2.3") == (1, 2, 3)
     assert parse_version("10.20.30") == (10, 20, 30)
+    assert parse_version("0.1.0-rev.2") == (0, 1, 0)
+    assert parse_version("v2.0.1-rc.1+build123") == (2, 0, 1)
 
     with pytest.raises(VersionError, match="Invalid SemVer string"):
         parse_version("invalid-version")
@@ -77,14 +79,17 @@ def test_bump_version() -> None:
     # Patch bump
     assert bump_version("0.1.0", "patch") == "0.1.1"
     assert bump_version("1.2.3", "patch") == "1.2.4"
+    assert bump_version("0.1.0-rev.2", "patch") == "0.1.1"
 
     # Minor bump (resets patch)
     assert bump_version("0.1.0", "minor") == "0.2.0"
     assert bump_version("1.2.3", "minor") == "1.3.0"
+    assert bump_version("0.1.0-rev.2", "minor") == "0.2.0"
 
     # Major bump (resets minor and patch)
     assert bump_version("0.1.0", "major") == "1.0.0"
     assert bump_version("1.2.3", "major") == "2.0.0"
+    assert bump_version("0.1.0-rev.2", "major") == "1.0.0"
 
     # Unknown bump type
     with pytest.raises(VersionError, match="Unknown bump type"):
