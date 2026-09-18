@@ -150,39 +150,31 @@ make install-hooks
 
 ---
 
-## Tag-Based Version Release Workflow
+## Automated Version Release Workflow
 
-`makelib-py` features an automated, tag-triggered release pipeline defined in [`.github/workflows/release.yml`](.github/workflows/release.yml).
+`makelib-py` features a continuous, automated release pipeline defined in [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
-### How to Cut a Release
+### Mandatory Release on Merge to `main`
 
-1. **Verify Local Quality**:
-   ```bash
-   make check-all
-   ```
-2. **Create and Push an Annotated Git Tag**:
-   ```bash
-   # Create a semantic version tag
-   git tag -a v0.1.0 -m "Release v0.1.0"
+Whenever new pull requests or changes are merged into `main`, the release pipeline runs **mandatorily**:
+1. **Quality Verification**: Executes `make check-all` on Python 3.14. If any gate fails, release publication is aborted.
+2. **Dynamic Tagging**: Automatically reads the version from `pyproject.toml` (e.g. `v0.1.0`). If new changes land without a version bump, it increments a unique revision tag (`v0.1.0-rev.<run_number>`), commits the tag, and pushes it to GitHub.
+3. **Artifact Packaging**: Builds source archives (`.tar.gz`) and wheels (`.whl`) via PEP 517 (`python -m build`).
+4. **Cryptographic Checksums**: Generates `SHA256SUMS.txt` for integrity verification.
+5. **GitHub Release Publication**: Uses `softprops/action-gh-release` to create the release, compile changelog notes from merged PRs, and attach all distribution packages.
 
-   # Push the tag to GitHub
-   git push origin v0.1.0
-   ```
+### Manual / Explicit Tag Releases
 
-### What the Release Pipeline Executes
+Maintainers can also cut explicit semantic version releases by pushing an annotated tag:
 
-```mermaid
-flowchart LR
-    A["Push Tag (v*.*.*)"] --> B["1. Verify Quality Gate (make check-all)"]
-    B --> C["2. Build Distribution (PEP 517 build)"]
-    C --> D["3. Generate SHA256 Checksums"]
-    D --> E["4. Publish GitHub Release with Artifacts & Notes"]
+```bash
+# Verify local checks pass
+make check-all
+
+# Tag and push semantic version
+git tag -a v0.2.0 -m "Release v0.2.0"
+git push origin v0.2.0
 ```
-
-1. **Strict Quality Verification**: Runs the complete `make check-all` suite across Python 3.14. If any lint, type, security, license, or test check fails, the pipeline aborts and no release is published.
-2. **Artifact Packaging**: Builds standard source archives (`.tar.gz`) and platform-independent wheels (`.whl`) via `python -m build`.
-3. **Cryptographic Checksums**: Generates `SHA256SUMS.txt` for tamper-proof verification of all release assets.
-4. **GitHub Release Publishing**: Uses `softprops/action-gh-release` to generate changelog notes automatically from merged PRs and commits, publishing the release with attached assets.
 
 ### Consuming Pinned Releases in Downstream Projects
 
