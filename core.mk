@@ -212,19 +212,25 @@ bump-major: ## Increment semantic major version (e.g. 0.1.0 -> 1.0.0)
 # ------------------------------------------------------------------------------
 # Git Hook Installation & Safeguards
 # ------------------------------------------------------------------------------
-install-hooks: ## Configure local Git hooks (pre-push check and main branch protection)
-	@echo "==> Configuring Git hooks..."
+install-hooks: ## Configure local Git hooks / Lefthook (pre-commit branch check and pre-push quality gates)
+	@echo "==> Configuring Git hooks / Lefthook..."
+	@if command -v lefthook >/dev/null 2>&1; then \
+		lefthook install; \
+		echo "==> Lefthook installed successfully."; \
+	fi
 	@if [ -d ".git" ]; then \
 		mkdir -p .git/hooks; \
-		if [ -f ".githooks/pre-push" ]; then \
-			cp .githooks/pre-push .git/hooks/pre-push; \
-			chmod +x .git/hooks/pre-push; \
-			echo "==> Installed .githooks/pre-push to .git/hooks/pre-push"; \
-		elif [ -f "$(MAKELIB_DIR)/.githooks/pre-push" ]; then \
-			cp "$(MAKELIB_DIR)/.githooks/pre-push" .git/hooks/pre-push; \
-			chmod +x .git/hooks/pre-push; \
-			echo "==> Installed $$(MAKELIB_DIR)/.githooks/pre-push to .git/hooks/pre-push"; \
-		fi; \
+		for hook in pre-commit pre-push; do \
+			if [ -f ".githooks/$$hook" ]; then \
+				cp ".githooks/$$hook" ".git/hooks/$$hook"; \
+				chmod +x ".git/hooks/$$hook"; \
+				echo "==> Installed .githooks/$$hook to .git/hooks/$$hook"; \
+			elif [ -f "$(MAKELIB_DIR)/.githooks/$$hook" ]; then \
+				cp "$(MAKELIB_DIR)/.githooks/$$hook" ".git/hooks/$$hook"; \
+				chmod +x ".git/hooks/$$hook"; \
+				echo "==> Installed $$(MAKELIB_DIR)/.githooks/$$hook to .git/hooks/$$hook"; \
+			fi; \
+		done; \
 		git config core.hooksPath .githooks 2>/dev/null || true; \
 		echo "==> Local Git hooks successfully configured!"; \
 	else \
