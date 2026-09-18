@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.14"]
 
     steps:
       - name: Check out repository
@@ -28,29 +28,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
           cache: "pip"
 
       - name: Install Toolchain & Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install ruff mypy bandit pip-audit pytest pytest-cov
-          # Install makelib package if pyproject.toml defines buildable package
           pip install -e .
 
-      - name: Run Ruff Lint Checks
-        run: make lint
-
-      - name: Run Mypy Strict Type Checks
-        run: make type-check
-
-      - name: Run Code Smell & Bandit Security AST Scans
-        run: make smell
-
-      - name: Run pip-audit CVE Dependency Checks
-        run: make audit
-
-      - name: Run Pytest & Enforce Coverage Threshold
-        run: make test MIN_COVERAGE=80
+      - name: Run Full Quality Gate Pipeline
+        run: make check-all MIN_COVERAGE=80
 
   ci-success:
     name: CI Check Status

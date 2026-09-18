@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sudo-krish/makelib-py/actions/workflows/ci.yml/badge.svg)](https://github.com/sudo-krish/makelib-py/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
@@ -204,19 +204,16 @@ jobs:
   quality-gate:
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
           cache: "pip"
       - run: pip install ruff mypy bandit pip-audit pytest pytest-cov && pip install -e .
-      - run: make lint
-      - run: make type-check
-      - run: make smell
-      - run: make audit
-      - run: make test MIN_COVERAGE=80
+      - run: make check-all MIN_COVERAGE=80
 ```
 
 ---
