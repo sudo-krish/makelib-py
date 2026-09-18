@@ -122,7 +122,7 @@ def test_hooks_and_lefthook_contain_branch_validation() -> None:
     """Verify that both native git hooks and lefthook enforce branch naming."""
     pre_commit = (ROOT_DIR / ".githooks" / "pre-commit").read_text(encoding="utf-8")
     assert "BRANCH_REGEX" in pre_commit
-    assert "PROTECTED_BRANCH=\"main\"" in pre_commit
+    assert 'PROTECTED_BRANCH="main"' in pre_commit
     assert "major|breaking" in pre_commit
 
     pre_push = (ROOT_DIR / ".githooks" / "pre-push").read_text(encoding="utf-8")
@@ -133,4 +133,3 @@ def test_hooks_and_lefthook_contain_branch_validation() -> None:
     assert "pre-commit:" in lefthook_yml
     assert "branch-name-lint:" in lefthook_yml
     assert "pre-push:" in lefthook_yml
-
