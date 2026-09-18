@@ -35,6 +35,8 @@ def test_core_mk_contains_required_targets() -> None:
         "type-check",
         "smell",
         "audit",
+        "secret-scan",
+        "license-check",
         "test",
         "check-all",
         "clean",
@@ -63,6 +65,8 @@ def test_core_mk_extensible_variables() -> None:
         "MYPY",
         "BANDIT",
         "PIP_AUDIT",
+        "DETECT_SECRETS",
+        "PIP_LICENSES",
         "PYTEST",
         "CONFIG_FILE",
     ]

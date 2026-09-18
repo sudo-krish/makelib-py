@@ -37,6 +37,8 @@ A centralized, drop-in Make library and toolchain configuration for Python proje
 | **Bandit** | Static AST Security Vulnerability Scanning | `make smell` |
 | **Mypy** | Strict Static Type Checking | `make type-check` |
 | **pip-audit** | Known CVE Vulnerability Auditing for Dependencies | `make audit` |
+| **detect-secrets** | Deep Scanning for Leaked Credentials & API Tokens | `make secret-scan` |
+| **pip-licenses** | Open-Source Dependency License Compliance Audit | `make license-check` |
 | **Pytest** | Unit Testing and Minimum Coverage Enforcement | `make test` |
 | **All Above** | Complete CI/CD Quality Gate Pipeline | `make check-all` |
 
@@ -135,8 +137,10 @@ make install-hooks
 | `make type-check` | Perform strict static type checking with Mypy. |
 | `make smell` | Run Ruff McCabe complexity analysis (`C901`) and Bandit security AST scanner. |
 | `make audit` | Audit dependencies against CVE databases using `pip-audit`. |
+| `make secret-scan` | Scan repository for hardcoded secrets, private keys, and API tokens. |
+| `make license-check` | Audit installed dependency licenses for open-source compliance. |
 | `make test` | Run Pytest test suite and enforce minimum code coverage (`MIN_COVERAGE`). |
-| `make check-all` | Execute all quality gates in sequence: `lint`, `type-check`, `smell`, `audit`, and `test`. |
+| `make check-all` | Execute all quality gates in sequence: `lint`, `type-check`, `smell`, `audit`, `secret-scan`, `license-check`, `test`. |
 | `make sync-config` | Re-sync the golden `pyproject.toml` from `.makelib/` into the project root. |
 | `make update-makelib` | Fetch and update `.makelib` to the latest commit/tag. |
 | `make clean` | Remove build caches, test caches, coverage outputs, and bytecode files. |

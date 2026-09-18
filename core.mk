@@ -26,6 +26,9 @@ MYPY           ?= mypy
 BANDIT         ?= bandit
 PIP_AUDIT      ?= pip-audit
 PIP_AUDIT_FLAGS?= $(if $(wildcard requirements.txt),-r requirements.txt,.)
+DETECT_SECRETS ?= detect-secrets
+PIP_LICENSES   ?= pip-licenses
+PIP_LICENSES_FLAGS ?= --summary
 PYTEST         ?= pytest
 PYTEST_FLAGS   ?= -v
 export PYTHONPATH ?= $(SRC_DIR)
@@ -39,7 +42,7 @@ MAKELIB_DIR    ?= $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 # ------------------------------------------------------------------------------
 # Phony Targets Declaration
 # ------------------------------------------------------------------------------
-.PHONY: help format lint type-check smell audit test check-all clean sync-config install-hooks
+.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean sync-config install-hooks
 
 # ------------------------------------------------------------------------------
 # Help Target (Self-Documenting via '##' comments)
@@ -112,6 +115,22 @@ audit: ## Audit dependencies for known CVE vulnerabilities using pip-audit
 	@echo "==> Dependency audit passed."
 
 # ------------------------------------------------------------------------------
+# Secret Scanning
+# ------------------------------------------------------------------------------
+secret-scan: ## Scan repository for hardcoded secrets and credentials
+	@echo "==> Scanning repository for hardcoded secrets and credentials..."
+	@$(PYTHON) -c 'import subprocess, json, sys; out = subprocess.check_output(["$(DETECT_SECRETS)", "scan"]); res = json.loads(out).get("results", {}); (print("ERROR: Hardcoded secrets detected:\n", json.dumps(res, indent=2)) or sys.exit(1)) if res else print("==> Zero secrets detected.")'
+	@echo "==> Secret scan passed."
+
+# ------------------------------------------------------------------------------
+# Dependency License Compliance
+# ------------------------------------------------------------------------------
+license-check: ## Audit dependency licenses for compliance
+	@echo "==> Auditing dependency licenses..."
+	@$(PIP_LICENSES) $(PIP_LICENSES_FLAGS)
+	@echo "==> License compliance check passed."
+
+# ------------------------------------------------------------------------------
 # Unit Testing & Coverage
 # ------------------------------------------------------------------------------
 test: ## Run tests and enforce code coverage threshold via Pytest
@@ -127,7 +146,7 @@ test: ## Run tests and enforce code coverage threshold via Pytest
 # ------------------------------------------------------------------------------
 # Full Quality Verification
 # ------------------------------------------------------------------------------
-check-all: lint type-check smell audit test ## Run all checks: lint, type-check, smell, audit, test
+check-all: lint type-check smell audit secret-scan license-check test ## Run all checks: lint, type-check, smell, audit, secret-scan, license-check, test
 	@echo ""
 	@echo "========================================================"
 	@echo "  All quality gates passed successfully! (makelib-py)"
