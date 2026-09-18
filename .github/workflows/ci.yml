@@ -12,6 +12,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  branch-name-lint:
+    name: Verify Branch Naming Policy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate PR branch naming classification
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          REGEX="^(feat|feature|fix|patch|major|breaking|docs|chore|refactor|ci)/[a-z0-9._-]+$"
+          if [[ ! "$BRANCH" =~ $REGEX ]]; then
+            echo "========================================================================"
+            echo "ERROR: Branch '$BRANCH' violates repository branch naming standard!"
+            echo "All PR branches must start with a classification prefix:"
+            echo "  - major/* or breaking/* -> Major release (X.0.0)"
+            echo "  - feat/*  or feature/*  -> Minor release (0.X.0)"
+            echo "  - fix/*, patch/*, docs/*, chore/*, refactor/*, ci/* -> Patch release (0.0.X)"
+            echo "========================================================================"
+            exit 1
+          fi
+          echo "Branch '$BRANCH' complies with naming policy."
+
   quality-gate:
     name: Quality Gate (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -60,14 +81,18 @@ jobs:
 
   ci-success:
     name: CI Check Status
-    needs: quality-gate
+    needs: [quality-gate, branch-name-lint]
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Verify all matrix checks passed
+      - name: Verify all checks passed
         run: |
           if [ "${{ needs.quality-gate.result }}" != "success" ]; then
-            echo "CI pipeline failed! See quality-gate job logs."
+            echo "Quality gate failed!"
             exit 1
           fi
-          echo "All quality gates passed successfully."
+          if [ "${{ needs.branch-name-lint.result }}" == "failure" ]; then
+            echo "Branch name check failed!"
+            exit 1
+          fi
+          echo "All CI quality and naming checks passed successfully."
