@@ -8,7 +8,7 @@ from pathlib import Path
 BRANCH_REGEX = (
     r"^(feat|feature|fix|patch|major|breaking|docs|chore|refactor|ci)/[a-z0-9._-]+$"
 )
-SEMVER_REGEX = r"^v?(\d+)\.(\d+)\.(\d+)$"
+SEMVER_REGEX = r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$"
 
 
 class VersionError(Exception):

@@ -73,13 +73,16 @@ jobs:
           allow-prereleases: true
           cache: "pip"
 
-      - name: Install Build Tools
+      - name: Install Build Tools & Package
         run: |
           python -m pip install --upgrade pip build
+          pip install -e .
 
       - name: Calculate Semantic Version Tag
         id: semver
         run: |
+          export PYTHONPATH=src
+
           # 1. Explicit tag name override provided
           if [ -n "${{ github.event.inputs.tag_name }}" ]; then
             TAG="${{ github.event.inputs.tag_name }}"
