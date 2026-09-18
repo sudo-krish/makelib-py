@@ -1,7 +1,7 @@
 # makelib-py
 
 [![CI](https://github.com/sudo-krish/makelib-py/actions/workflows/ci.yml/badge.svg)](https://github.com/sudo-krish/makelib-py/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-apache-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
@@ -29,18 +29,18 @@ A centralized, drop-in Make library and toolchain configuration for Python proje
 
 ## Toolchain Overview
 
-| Tool | Quality Gate | Primary Target |
-| :--- | :--- | :--- |
-| **Ruff** | Code Formatting & Import Sorting (`isort`) | `make format` |
-| **Ruff** | Linting & Bug Detection (`flake8-bugbear`, `pyflakes`) | `make lint` |
-| **Ruff (C901)** | McCabe Cyclomatic Complexity Analysis | `make smell` |
-| **Bandit** | Static AST Security Vulnerability Scanning | `make smell` |
-| **Mypy** | Strict Static Type Checking | `make type-check` |
-| **pip-audit** | Known CVE Vulnerability Auditing for Dependencies | `make audit` |
-| **detect-secrets** | Deep Scanning for Leaked Credentials & API Tokens | `make secret-scan` |
-| **pip-licenses** | Open-Source Dependency License Compliance Audit | `make license-check` |
-| **Pytest** | Unit Testing and Minimum Coverage Enforcement | `make test` |
-| **All Above** | Complete CI/CD Quality Gate Pipeline | `make check-all` |
+| Tool                     | Quality Gate                                               | Primary Target         |
+| :----------------------- | :--------------------------------------------------------- | :--------------------- |
+| **Ruff**           | Code Formatting & Import Sorting (`isort`)               | `make format`        |
+| **Ruff**           | Linting & Bug Detection (`flake8-bugbear`, `pyflakes`) | `make lint`          |
+| **Ruff (C901)**    | McCabe Cyclomatic Complexity Analysis                      | `make smell`         |
+| **Bandit**         | Static AST Security Vulnerability Scanning                 | `make smell`         |
+| **Mypy**           | Strict Static Type Checking                                | `make type-check`    |
+| **pip-audit**      | Known CVE Vulnerability Auditing for Dependencies          | `make audit`         |
+| **detect-secrets** | Deep Scanning for Leaked Credentials & API Tokens          | `make secret-scan`   |
+| **pip-licenses**   | Open-Source Dependency License Compliance Audit            | `make license-check` |
+| **Pytest**         | Unit Testing and Minimum Coverage Enforcement              | `make test`          |
+| **All Above**      | Complete CI/CD Quality Gate Pipeline                       | `make check-all`     |
 
 ---
 
@@ -104,6 +104,7 @@ make init-makelib
 ```
 
 This will:
+
 1. Shallow clone `makelib-py` into `.makelib/`.
 2. Back up any existing `pyproject.toml` to `pyproject.toml.bak`.
 3. Copy the golden `pyproject.toml` into your project root.
@@ -129,22 +130,71 @@ make install-hooks
 
 ## Available Make Targets
 
-| Target | Description |
-| :--- | :--- |
-| `make help` | Show colorized target list with descriptions and current variable values. |
-| `make format` | Automatically reformat code and sort imports using Ruff. |
-| `make lint` | Run Ruff format checks and linter rules without mutating source files. |
-| `make type-check` | Perform strict static type checking with Mypy. |
-| `make smell` | Run Ruff McCabe complexity analysis (`C901`) and Bandit security AST scanner. |
-| `make audit` | Audit dependencies against CVE databases using `pip-audit`. |
-| `make secret-scan` | Scan repository for hardcoded secrets, private keys, and API tokens. |
-| `make license-check` | Audit installed dependency licenses for open-source compliance. |
-| `make test` | Run Pytest test suite and enforce minimum code coverage (`MIN_COVERAGE`). |
-| `make check-all` | Execute all quality gates in sequence: `lint`, `type-check`, `smell`, `audit`, `secret-scan`, `license-check`, `test`. |
-| `make sync-config` | Re-sync the golden `pyproject.toml` from `.makelib/` into the project root. |
-| `make update-makelib` | Fetch and update `.makelib` to the latest commit/tag. |
-| `make clean` | Remove build caches, test caches, coverage outputs, and bytecode files. |
-| `make install-hooks` | Configure local Git hooks (pre-push check and direct push blocker). |
+| Target                  | Description                                                                                                                         |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
+| `make help`           | Show colorized target list with descriptions and current variable values.                                                           |
+| `make format`         | Automatically reformat code and sort imports using Ruff.                                                                            |
+| `make lint`           | Run Ruff format checks and linter rules without mutating source files.                                                              |
+| `make type-check`     | Perform strict static type checking with Mypy.                                                                                      |
+| `make smell`          | Run Ruff McCabe complexity analysis (`C901`) and Bandit security AST scanner.                                                     |
+| `make audit`          | Audit dependencies against CVE databases using`pip-audit`.                                                                        |
+| `make secret-scan`    | Scan repository for hardcoded secrets, private keys, and API tokens.                                                                |
+| `make license-check`  | Audit installed dependency licenses for open-source compliance.                                                                     |
+| `make test`           | Run Pytest test suite and enforce minimum code coverage (`MIN_COVERAGE`).                                                         |
+| `make check-all`      | Execute all quality gates in sequence:`lint`, `type-check`, `smell`, `audit`, `secret-scan`, `license-check`, `test`. |
+| `make build`          | Build source distribution and wheel packages in`dist/`.                                                                           |
+| `make sync-config`    | Re-sync the golden`pyproject.toml` from `.makelib/` into the project root.                                                      |
+| `make update-makelib` | Fetch and update`.makelib` to the latest commit/tag.                                                                              |
+| `make clean`          | Remove build caches, test caches, coverage outputs, and bytecode files.                                                             |
+| `make install-hooks`  | Configure local Git hooks (pre-push check and direct push blocker).                                                                 |
+
+---
+
+## Tag-Based Version Release Workflow
+
+`makelib-py` features an automated, tag-triggered release pipeline defined in [`.github/workflows/release.yml`](.github/workflows/release.yml).
+
+### How to Cut a Release
+
+1. **Verify Local Quality**:
+   ```bash
+   make check-all
+   ```
+2. **Create and Push an Annotated Git Tag**:
+   ```bash
+   # Create a semantic version tag
+   git tag -a v0.1.0 -m "Release v0.1.0"
+
+   # Push the tag to GitHub
+   git push origin v0.1.0
+   ```
+
+### What the Release Pipeline Executes
+
+```mermaid
+flowchart LR
+    A["Push Tag (v*.*.*)"] --> B["1. Verify Quality Gate (make check-all)"]
+    B --> C["2. Build Distribution (PEP 517 build)"]
+    C --> D["3. Generate SHA256 Checksums"]
+    D --> E["4. Publish GitHub Release with Artifacts & Notes"]
+```
+
+1. **Strict Quality Verification**: Runs the complete `make check-all` suite across Python 3.14. If any lint, type, security, license, or test check fails, the pipeline aborts and no release is published.
+2. **Artifact Packaging**: Builds standard source archives (`.tar.gz`) and platform-independent wheels (`.whl`) via `python -m build`.
+3. **Cryptographic Checksums**: Generates `SHA256SUMS.txt` for tamper-proof verification of all release assets.
+4. **GitHub Release Publishing**: Uses `softprops/action-gh-release` to generate changelog notes automatically from merged PRs and commits, publishing the release with attached assets.
+
+### Consuming Pinned Releases in Downstream Projects
+
+Downstream projects can pin to specific releases by updating `MAKELIB_REF` in their `Makefile`:
+
+```makefile
+# Pin to a tagged release for immutable, reproducible builds
+MAKELIB_REF ?= v0.1.0
+
+# Include core targets
+-include $(MAKELIB_DIR)/core.mk
+```
 
 ---
 
@@ -155,6 +205,7 @@ To uphold professional software engineering standards, direct pushes to `main` a
 ### 1. Server-Side GitHub Ruleset (Configured on GitHub)
 
 The repository enforces a GitHub Ruleset with the following settings:
+
 - **Target branch**: `main`
 - **Require a pull request before merging**: Enabled (restricts direct pushes).
 - **Require status checks to pass before merging**: Enabled.
@@ -169,6 +220,7 @@ make install-hooks
 ```
 
 This activates `.githooks/pre-push`, which:
+
 1. Rejects any `git push origin main` command with a helpful message directing you to create a feature branch.
 2. Automatically executes `make check-all` before pushing feature branches, preventing broken commits from reaching remote CI.
 

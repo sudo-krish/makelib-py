@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (e.g. v0.1.0)"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify Release Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+          cache: "pip"
+
+      - name: Install Toolchain & Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy bandit pip-audit detect-secrets pip-licenses pytest pytest-cov build
+          pip install -e .
+
+      - name: Run Full Quality Gate Suite
+        run: make check-all MIN_COVERAGE=80
+
+  publish-release:
+    name: Build & Publish GitHub Release
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+          cache: "pip"
+
+      - name: Install Build Tools
+        run: |
+          python -m pip install --upgrade pip build
+
+      - name: Build Source and Wheel Distributions
+        run: |
+          python -m build
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release & Attach Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}

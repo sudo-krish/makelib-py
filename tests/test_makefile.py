@@ -40,6 +40,7 @@ def test_core_mk_contains_required_targets() -> None:
         "test",
         "check-all",
         "clean",
+        "build",
         "sync-config",
         "install-hooks",
     ]
