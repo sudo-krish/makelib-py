@@ -1,0 +1,137 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "makelib-py"
+version = "0.1.0"
+description = "Centralized Make commands and toolchain configurations for Python projects"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "makelib-py maintainers" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ------------------------------------------------------------------------------
+# Ruff Configuration (Linter, Formatter, Import Sorter, Complexity)
+# ------------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+indent-width = 4
+
+# Exclude standard generated directories, caches, and environments
+exclude = [
+    ".git",
+    ".makelib",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pypackages__",
+    "build",
+    "dist",
+    "site-packages",
+]
+
+[tool.ruff.lint]
+# Active rules:
+#   E, W - pycodestyle errors and warnings
+#   F    - Pyflakes (syntax/logical issues, undefined variables)
+#   I    - isort (standardized import ordering)
+#   B    - flake8-bugbear (common anti-patterns and subtle bugs)
+#   C901 - McCabe cyclomatic complexity
+#   UP   - pyupgrade (modern Python idiom migrations)
+#   S    - flake8-bandit (security AST linting)
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C901",
+    "UP",
+    "S",
+]
+ignore = []
+
+[tool.ruff.lint.mccabe]
+# Maximum allowed cyclomatic complexity for C901 checks
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+# Assertions are standard practice in test cases
+"tests/**/*" = ["S101"]
+
+# ------------------------------------------------------------------------------
+# Mypy Configuration (Strict Static Type Checking)
+# ------------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+show_error_codes = true
+show_column_numbers = true
+pretty = true
+
+# ------------------------------------------------------------------------------
+# Pytest Configuration
+# ------------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "-q",
+    "--strict-markers",
+    "--strict-config",
+]
+
+# ------------------------------------------------------------------------------
+# Coverage Configuration
+# ------------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "tests/*",
+    ".venv/*",
+    ".makelib/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+
+# ------------------------------------------------------------------------------
+# Bandit Security AST Scanner Configuration
+# ------------------------------------------------------------------------------
+[tool.bandit]
+targets = ["src"]
+exclude_dirs = ["tests", ".venv", ".makelib"]
+skips = ["B101"]

@@ -1,0 +1,30 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+.agent
+
+# Tooling and quality assurance caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+*.log
+
+# Distribution and packaging
+build/
+dist/
+*.egg-info/
+
+# Makelib downstream clone directory
+.makelib/
