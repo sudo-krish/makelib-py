@@ -14,6 +14,7 @@ def test_required_files_exist() -> None:
     expected_files = [
         "core.mk",
         "pyproject.toml",
+        "template_pyproject.toml",
         "downstream_template.mk",
         "Makefile",
         "README.md",
@@ -30,6 +31,7 @@ def test_core_mk_contains_required_targets() -> None:
 
     required_targets = [
         "help",
+        "sync",
         "format",
         "lint",
         "type-check",
@@ -65,6 +67,7 @@ def test_core_mk_extensible_variables() -> None:
         "MIN_COVERAGE",
         "MAX_COMPLEXITY",
         "PYTHON",
+        "UV",
         "RUFF",
         "MYPY",
         "BANDIT",
@@ -88,34 +91,65 @@ def test_downstream_template_contains_boilerplate() -> None:
     assert "init-makelib:" in template
     assert "update-makelib:" in template
     assert "-include $(MAKELIB_DIR)/core.mk" in template
+    assert '[ ! -f "pyproject.toml" ]' in template
+    assert "template_pyproject.toml" in template
+    assert "preserving project metadata" in template
 
 
-def test_sync_config_simulation(tmp_path: Path) -> None:
-    """Simulate downstream project syncing pyproject.toml from .makelib/."""
-    # Create downstream directory structure
+def test_init_makelib_simulation(tmp_path: Path) -> None:
+    """Simulate init-makelib behavior: bootstrapping template vs preserving config."""
     downstream = tmp_path / "downstream"
     downstream.mkdir()
     makelib_dir = downstream / ".makelib"
     makelib_dir.mkdir()
 
-    # Place golden pyproject.toml in .makelib
-    golden_file = ROOT_DIR / "pyproject.toml"
-    shutil.copy(golden_file, makelib_dir / "pyproject.toml")
+    # Place template_pyproject.toml in .makelib
+    template_file = ROOT_DIR / "template_pyproject.toml"
+    shutil.copy(template_file, makelib_dir / "template_pyproject.toml")
 
-    # Initial sync
+    # Case 1: Fresh project without pyproject.toml -> bootstraps template config
     dest_config = downstream / "pyproject.toml"
     assert not dest_config.exists()
-    shutil.copy(makelib_dir / "pyproject.toml", dest_config)
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "template_pyproject.toml", dest_config)
+    assert dest_config.exists()
+    assert "my-service" in dest_config.read_text(encoding="utf-8")
+    assert "dependency-groups" in dest_config.read_text(encoding="utf-8")
+
+    # Case 2: Project already has pyproject.toml -> preserves existing metadata
+    custom_content = '[project]\nname = "my-custom-service"\nversion = "1.0.0"\n'
+    dest_config.write_text(custom_content, encoding="utf-8")
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "template_pyproject.toml", dest_config)
+    assert dest_config.read_text(encoding="utf-8") == custom_content
+
+
+def test_sync_config_simulation(tmp_path: Path) -> None:
+    """Simulate downstream safe sync-config: never damage existing pyproject.toml."""
+    downstream = tmp_path / "downstream"
+    downstream.mkdir()
+    makelib_dir = downstream / ".makelib"
+    makelib_dir.mkdir()
+
+    # Place template_pyproject.toml in .makelib
+    template_file = ROOT_DIR / "template_pyproject.toml"
+    shutil.copy(template_file, makelib_dir / "template_pyproject.toml")
+
+    # If pyproject.toml does not exist, installs template
+    dest_config = downstream / "pyproject.toml"
+    assert not dest_config.exists()
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "template_pyproject.toml", dest_config)
     assert dest_config.exists()
 
-    # Modify downstream pyproject.toml and perform simulated resync with backup
-    dest_config.write_text("# custom edit\n", encoding="utf-8")
-    backup_file = downstream / "pyproject.toml.bak"
-    shutil.copy(dest_config, backup_file)
-    shutil.copy(makelib_dir / "pyproject.toml", dest_config)
+    # If pyproject.toml exists with custom content, sync-config preserves it
+    custom_content = '[project]\nname = "custom-app"\ndependencies = ["requests"]\n'
+    dest_config.write_text(custom_content, encoding="utf-8")
 
-    assert backup_file.read_text(encoding="utf-8") == "# custom edit\n"
-    assert "makelib-py" in dest_config.read_text(encoding="utf-8")
+    # Simulated safe sync-config: only install if not exists
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "template_pyproject.toml", dest_config)
+    assert dest_config.read_text(encoding="utf-8") == custom_content
 
 
 def test_hooks_and_lefthook_contain_branch_validation() -> None:

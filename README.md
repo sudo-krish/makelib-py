@@ -71,14 +71,19 @@ $(MAKELIB_DIR):
 	@echo "==> Cloning makelib-py ($(MAKELIB_REF)) into $(MAKELIB_DIR)..."
 	@git clone --depth 1 --branch $(MAKELIB_REF) $(MAKELIB_REPO) $(MAKELIB_DIR)
 
-init-makelib: $(MAKELIB_DIR) ## Clone makelib and sync golden pyproject.toml into project root
+# Initialize makelib-py and bootstrap template pyproject.toml if not already present
+init-makelib: $(MAKELIB_DIR) ## Clone makelib and bootstrap template pyproject.toml
 	@echo "==> Initializing makelib-py..."
-	@if [ -f "pyproject.toml" ]; then \
-		echo "Backing up existing pyproject.toml to pyproject.toml.bak..."; \
-		cp pyproject.toml pyproject.toml.bak; \
+	@if [ ! -f "pyproject.toml" ]; then \
+		cp $(MAKELIB_DIR)/template_pyproject.toml pyproject.toml; \
+		echo "==> Installed uv template pyproject.toml into project root."; \
+	else \
+		echo "==> Existing pyproject.toml detected; preserving project metadata."; \
 	fi
-	@cp $(MAKELIB_DIR)/pyproject.toml pyproject.toml
-	@echo "==> Successfully installed golden pyproject.toml into project root."
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "==> Syncing virtual environment with uv..."; \
+		uv sync || true; \
+	fi
 	@echo "==> makelib-py initialized! Run 'make help' to inspect available targets."
 
 update-makelib: $(MAKELIB_DIR) ## Fetch and fast-forward latest makelib-py changes
@@ -95,7 +100,7 @@ help:
 endif
 ```
 
-### Step 2: Initialize makelib-py
+### Step 2: Initialize makelib-py & uv Virtual Environment
 
 Run the initialization target:
 
@@ -106,10 +111,42 @@ make init-makelib
 This will:
 
 1. Shallow clone `makelib-py` into `.makelib/`.
-2. Back up any existing `pyproject.toml` to `pyproject.toml.bak`.
-3. Copy the golden `pyproject.toml` into your project root.
+2. Bootstrap `pyproject.toml` from `template_pyproject.toml` if the project does not already have one. If `pyproject.toml` already exists, it is strictly preserved so your project identity, dependencies, and settings are never overwritten.
+3. Automatically sync the virtual environment using `uv sync` if `uv` is installed on the system.
 
-### Step 3: Update `.gitignore`
+### Step 3: Fast Dependency Management with `uv`
+
+Both `makelib-py` and downstream projects use standard `uv` dependency groups:
+
+```toml
+[project]
+name = "my-service"
+version = "0.1.0"
+dependencies = [
+    # runtime dependencies...
+]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8.0",
+    "build>=1.2.0",
+    "detect-secrets>=1.5.0",
+    "mypy>=1.14.0",
+    "pip-audit>=2.8.0",
+    "pip-licenses>=5.0.0",
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.0",
+]
+```
+
+Run `make sync` at any time to sync runtime and development dependencies into `.venv`:
+
+```bash
+make sync
+```
+
+### Step 4: Update `.gitignore`
 
 Add the hidden `.makelib/` folder to your project's `.gitignore`:
 
@@ -117,7 +154,7 @@ Add the hidden `.makelib/` folder to your project's `.gitignore`:
 echo ".makelib/" >> .gitignore
 ```
 
-### Step 4: Verify Installation & Configure Hooks
+### Step 5: Verify Installation & Configure Hooks
 
 Run the self-documenting help command and configure local hooks:
 
@@ -133,6 +170,7 @@ make install-hooks
 | Target                  | Description                                                                                                                         |
 | :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
 | `make help`           | Show colorized target list with descriptions and current variable values.                                                           |
+| `make sync`           | Synchronize dependencies and development virtual environment with `uv`.                                                           |
 | `make format`         | Automatically reformat code and sort imports using Ruff.                                                                            |
 | `make lint`           | Run Ruff format checks and linter rules without mutating source files.                                                              |
 | `make type-check`     | Perform strict static type checking with Mypy.                                                                                      |
@@ -146,7 +184,7 @@ make install-hooks
 | `make bump-patch`     | Increment semantic patch version (e.g.`0.1.0` -> `0.1.1`).                                                                      |
 | `make bump-minor`     | Increment semantic minor version (e.g.`0.1.0` -> `0.2.0`).                                                                      |
 | `make bump-major`     | Increment semantic major version (e.g.`0.1.0` -> `1.0.0`).                                                                      |
-| `make sync-config`    | Re-sync the golden`pyproject.toml` from `.makelib/` into the project root.                                                      |
+| `make sync-config`    | Safely install template`pyproject.toml` into project root without overwriting existing configuration.                           |
 | `make update-makelib` | Fetch and update`.makelib` to the latest commit/tag.                                                                              |
 | `make clean`          | Remove build caches, test caches, coverage outputs, and bytecode files.                                                             |
 | `make install-hooks`  | Configure local Git hooks & Lefthook (`pre-commit` branch naming validation and `pre-push` quality gates).                      |
