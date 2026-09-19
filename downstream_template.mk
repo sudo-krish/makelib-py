@@ -22,14 +22,18 @@ $(MAKELIB_DIR):
 	@echo "==> Cloning makelib-py ($(MAKELIB_REF)) into $(MAKELIB_DIR)..."
 	@git clone --depth 1 --branch $(MAKELIB_REF) $(MAKELIB_REPO) $(MAKELIB_DIR)
 
-# Initialize makelib-py and bootstrap pyproject.toml if not already present
-init-makelib: $(MAKELIB_DIR) ## Clone makelib and bootstrap pyproject.toml
+# Initialize makelib-py and bootstrap template pyproject.toml if not already present
+init-makelib: $(MAKELIB_DIR) ## Clone makelib and bootstrap template pyproject.toml
 	@echo "==> Initializing makelib-py..."
 	@if [ ! -f "pyproject.toml" ]; then \
-		cp $(MAKELIB_DIR)/pyproject.toml pyproject.toml; \
-		echo "==> Installed golden pyproject.toml into project root."; \
+		cp $(MAKELIB_DIR)/template_pyproject.toml pyproject.toml; \
+		echo "==> Installed uv template pyproject.toml into project root."; \
 	else \
 		echo "==> Existing pyproject.toml detected; preserving project metadata."; \
+	fi
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "==> Syncing virtual environment with uv..."; \
+		uv sync || true; \
 	fi
 	@echo "==> makelib-py initialized! Run 'make help' to inspect available targets."
 

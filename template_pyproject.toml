@@ -3,21 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "makelib-py"
-version = "0.2.0"
-description = "Centralized Make commands and toolchain configurations for Python projects"
+name = "my-service"
+version = "0.1.0"
+description = "Downstream Python service powered by makelib-py and uv"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = []
-authors = [
-    { name = "makelib-py maintainers" },
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Software Development :: Build Tools",
-    "Topic :: Software Development :: Quality Assurance",
-]
 
 [dependency-groups]
 dev = [
@@ -32,18 +23,14 @@ dev = [
     "ruff>=0.9.0",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
 # ------------------------------------------------------------------------------
 # Ruff Configuration (Linter, Formatter, Import Sorter, Complexity)
 # ------------------------------------------------------------------------------
 [tool.ruff]
-target-version = "py313"
+target-version = "py312"
 line-length = 88
 indent-width = 4
 
-# Exclude standard generated directories, caches, and environments
 exclude = [
     ".git",
     ".makelib",
@@ -58,14 +45,6 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-# Active rules:
-#   E, W - pycodestyle errors and warnings
-#   F    - Pyflakes (syntax/logical issues, undefined variables)
-#   I    - isort (standardized import ordering)
-#   B    - flake8-bugbear (common anti-patterns and subtle bugs)
-#   C901 - McCabe cyclomatic complexity
-#   UP   - pyupgrade (modern Python idiom migrations)
-#   S    - flake8-bandit (security AST linting)
 select = [
     "E",
     "W",
@@ -79,21 +58,19 @@ select = [
 ignore = []
 
 [tool.ruff.lint.mccabe]
-# Maximum allowed cyclomatic complexity for C901 checks
 max-complexity = 10
 
 [tool.ruff.lint.isort]
-known-first-party = ["src", "makelib"]
+known-first-party = ["src"]
 
 [tool.ruff.lint.per-file-ignores]
-# Assertions are standard practice in test cases
 "tests/**/*" = ["S101"]
 
 # ------------------------------------------------------------------------------
 # Mypy Configuration (Strict Static Type Checking)
 # ------------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

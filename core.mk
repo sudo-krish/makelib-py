@@ -21,6 +21,7 @@ MAX_COMPLEXITY ?= 10
 
 # Python environment and toolchain executables
 PYTHON         ?= python3
+UV             ?= $(shell command -v uv 2>/dev/null)
 RUFF           ?= ruff
 MYPY           ?= mypy
 BANDIT         ?= bandit
@@ -31,18 +32,18 @@ PIP_LICENSES   ?= pip-licenses
 PIP_LICENSES_FLAGS ?= --summary
 PYTEST         ?= pytest
 PYTEST_FLAGS   ?= -v
-export PYTHONPATH ?= $(SRC_DIR)
+
+# Resolve location of this makefile (allows locating bundled golden config)
+MAKELIB_DIR    ?= $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+export PYTHONPATH ?= $(SRC_DIR):$(MAKELIB_DIR)/src
 
 # Configuration paths
 CONFIG_FILE    ?= pyproject.toml
 
-# Resolve location of this makefile (allows locating bundled golden config)
-MAKELIB_DIR    ?= $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
-
 # ------------------------------------------------------------------------------
 # Phony Targets Declaration
 # ------------------------------------------------------------------------------
-.PHONY: help format lint type-check smell audit secret-scan license-check test check-all clean build bump-patch bump-minor bump-major sync-config install-hooks
+.PHONY: help sync format lint type-check smell audit secret-scan license-check test check-all clean build bump-patch bump-minor bump-major sync-config install-hooks
 
 # ------------------------------------------------------------------------------
 # Help Target (Self-Documenting via '##' comments)
@@ -153,25 +154,24 @@ check-all: lint type-check smell audit secret-scan license-check test ## Run all
 	@echo "========================================================"
 
 # ------------------------------------------------------------------------------
-# Configuration Syncing
+# Environment & Configuration Syncing
 # ------------------------------------------------------------------------------
-sync-config: ## Copy the golden pyproject.toml from makelib into project root
-	@echo "==> Syncing golden pyproject.toml from makelib-py..."
-	@if [ ! -f "$(MAKELIB_DIR)/pyproject.toml" ]; then \
-		echo "Error: Golden pyproject.toml not found at $(MAKELIB_DIR)/pyproject.toml"; \
-		exit 1; \
-	fi
-	@SRC_REAL="$$(realpath $(MAKELIB_DIR)/pyproject.toml 2>/dev/null || readlink -f $(MAKELIB_DIR)/pyproject.toml)"; \
-	DST_REAL="$$(realpath ./pyproject.toml 2>/dev/null || readlink -f ./pyproject.toml || echo "./pyproject.toml")"; \
-	if [ -f "./pyproject.toml" ] && [ "$$SRC_REAL" = "$$DST_REAL" ]; then \
-		echo "==> makelib is running within its own repository root; skipping sync."; \
+sync: ## Sync dependencies and dev virtual environment with uv
+	@echo "==> Syncing environment with uv..."
+	@if [ -n "$(UV)" ]; then \
+		$(UV) sync; \
 	else \
-		if [ -f "./pyproject.toml" ]; then \
-			echo "Backing up existing pyproject.toml to pyproject.toml.bak..."; \
-			cp ./pyproject.toml ./pyproject.toml.bak; \
-		fi; \
-		cp "$$SRC_REAL" ./pyproject.toml; \
-		echo "==> Successfully synced golden pyproject.toml to ./pyproject.toml"; \
+		echo "Notice: uv is not installed. Run 'pip install -e .' or install uv."; \
+	fi
+
+sync-config: ## Safely install template pyproject.toml without overwriting project metadata
+	@echo "==> Checking template configuration from makelib-py..."
+	@if [ ! -f "pyproject.toml" ]; then \
+		cp "$(MAKELIB_DIR)/template_pyproject.toml" ./pyproject.toml; \
+		echo "==> Successfully installed template pyproject.toml to ./pyproject.toml"; \
+	else \
+		echo "==> Existing pyproject.toml detected; preserving project metadata without modification."; \
+		echo "    (Reference template is available at $(MAKELIB_DIR)/template_pyproject.toml)"; \
 	fi
 
 # ------------------------------------------------------------------------------
