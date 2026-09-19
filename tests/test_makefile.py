@@ -88,6 +88,35 @@ def test_downstream_template_contains_boilerplate() -> None:
     assert "init-makelib:" in template
     assert "update-makelib:" in template
     assert "-include $(MAKELIB_DIR)/core.mk" in template
+    assert '[ ! -f "pyproject.toml" ]' in template
+    assert "preserving project metadata" in template
+
+
+def test_init_makelib_simulation(tmp_path: Path) -> None:
+    """Simulate init-makelib behavior: bootstrapping new config vs preserving config."""
+    downstream = tmp_path / "downstream"
+    downstream.mkdir()
+    makelib_dir = downstream / ".makelib"
+    makelib_dir.mkdir()
+
+    # Place golden pyproject.toml in .makelib
+    golden_file = ROOT_DIR / "pyproject.toml"
+    shutil.copy(golden_file, makelib_dir / "pyproject.toml")
+
+    # Case 1: Fresh project without pyproject.toml -> bootstraps golden config
+    dest_config = downstream / "pyproject.toml"
+    assert not dest_config.exists()
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "pyproject.toml", dest_config)
+    assert dest_config.exists()
+    assert "makelib-py" in dest_config.read_text(encoding="utf-8")
+
+    # Case 2: Project already has pyproject.toml -> preserves existing metadata
+    custom_content = '[project]\nname = "my-custom-service"\nversion = "1.0.0"\n'
+    dest_config.write_text(custom_content, encoding="utf-8")
+    if not dest_config.is_file():
+        shutil.copy(makelib_dir / "pyproject.toml", dest_config)
+    assert dest_config.read_text(encoding="utf-8") == custom_content
 
 
 def test_sync_config_simulation(tmp_path: Path) -> None:
